@@ -1,0 +1,37 @@
+import socket
+from wand.image import Image
+import io
+import sys
+
+hostname = socket.gethostname()
+IPAddr = socket.gethostbyname(hostname)
+count = 0
+
+# TCP Server Info
+TCP_IP = "100.69.238.163"
+TCP_PORT = 80
+server_address = (TCP_IP, TCP_PORT)
+
+# Creating TCP/IP Socket
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind((TCP_IP, TCP_PORT))
+sock.listen(1)
+
+connection, addr = sock.accept()
+
+print("READY")
+
+data = connection.recv(4)
+
+while data:
+ data = connection.recv(4)
+ print(data[0], data[1], data[2], data[3])
+ brightness = data[0] + data[1]
+ contrast = data[2] + data[3]
+ print(brightness, contrast)
+ intb = int(brightness)
+ intc = int(contrast)
+ image  = Image(filename = './overlay_image.jpg')
+ newimage = image.clone()
+ newimage.brightness_contrast(int(intb), int(intc), 'Red')
+ newimage.save(filename = 'modified_image.jpg')

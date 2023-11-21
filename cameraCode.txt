@@ -1,0 +1,61 @@
+#include <opencv2/opencv.hpp>
+#include <sys/time.h>
+#include "D8MCapture.h"
+#include "hps_0.h"
+
+using namespace cv;
+using namespace std;
+
+#ifndef CAPTURE_RAM_DEVICE
+#define CAPTURE_RAM_DEVICE "/dev/f2h-dma-memory"
+#endif /* ifndef CAPTURE_RAM_DEVICE */
+
+int main()
+{
+    Mat src;
+    D8MCapture *cap = new D8MCapture(TV_DECODER_TERASIC_STREAM_CAPTURE_BASE, CAPTURE_RAM_DEVICE);
+
+ if (!cap->isOpened()) {
+        return -1;
+    }
+
+    char str[100];
+    static struct timeval last_time;
+   // namedWindow("camera");
+
+ while (1) {
+        if (!cap->read(src))
+                return -1;
+
+        // Loading our overlay image
+        Mat src2 = imread("../../modified_image.jpg");
+        Mat resized0, resized, resized2, resized3, final;
+
+        // Resize the overlay image and convert image to 4 channels
+        resize(src2, resized, Size(800, 480), INTER_LINEAR);
+        //resize(src, resized0, Size(480, 480), INTER_LINEAR);
+        cvtColor(resized, resized3, COLOR_BGR2BGRA);
+        //resize(src, resized2, Size(dWidth, dHeight), INTER_LINEAR);
+
+ cout << "Camera: " << src.rows << "x" << src.cols << "Channels: " << src.channels() <<  endl;
+        cout << "Image: " << resized3.rows << "x" << resized3.cols << "Channels: " << resized3.channels() << endl;
+
+
+        addWeighted(src, .8, resized3, .9, 0.0, final);
+        //Mat insetImage(resized2, Rect(0,0, 10,10));
+        //resized.copyTo(resized2(Rect(0,0, 10, 10)));
+
+        //putText(src, "Example", Point(20,40), FONT_HERSHEY_DUPLEX, 1, Scalar(0,255,0));
+        imshow("Camera with overlay", final);
+
+        //-- bail out if escape was pressed
+        int c = waitKey(10);
+        if ((char) c == 27) {
+            break;
+ 	 }
+    }
+    delete cap;
+    destroyAllWindows();
+    return 0;
+}
+
